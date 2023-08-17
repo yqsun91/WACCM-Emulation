@@ -65,4 +65,62 @@ class FullyConnected(nn.Module):
 
         return self.linear_stack(X)
 
+class EarlyStopper:
+    def __init__(self, patience=1, min_delta=0):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.min_validation_loss = np.inf
+
+    def early_stop(self, validation_loss):
+        if validation_loss < self.min_validation_loss:
+            self.min_validation_loss = validation_loss
+            self.counter = 0
+
+            #save model
+            torch.save(model.state_dict(), 'conv_torch.pth')
+
+        elif validation_loss > (self.min_validation_loss + self.min_delta):
+            self.counter += 1
+            if self.counter >= self.patience:
+                return True
+        return False
+
+# training loop
+def train_loop(dataloader, model, loss_fn, optimizer):
+    size = len(dataloader.dataset)
+    avg_loss = 0
+    for batch, (X, Y) in enumerate(dataloader):
+        # Compute prediction and loss
+        pred = model(X)
+        loss = loss_fn(pred, Y)
+
+        # Backpropagation
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        optimizer.step()
+
+        with torch.no_grad():
+            avg_loss += loss.item()
+
+    avg_loss /= len(dataloader)
+
+    return avg_loss
+
+
+# validating loop
+def val_loop(dataloader, model, loss_fn):
+    avg_loss = 0
+    with torch.no_grad():
+        for batch, (X, Y) in enumerate(dataloader):
+            # Compute prediction and loss
+            pred = model(X)
+            loss = loss_fn(pred, Y)
+            avg_loss += loss.item()
+
+    avg_loss /= len(dataloader)
+
+    return avg_loss
+
+
 
