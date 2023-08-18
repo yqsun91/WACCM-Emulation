@@ -1,5 +1,7 @@
 import numpy as np
 
+dim_NN =int(564)
+dim_NNout =int(140)
 
 def newnorm(var, varm, varstd):
   dim=varm.size
