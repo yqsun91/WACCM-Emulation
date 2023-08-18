@@ -15,8 +15,8 @@ from loaddata import newnorm, data_loader
 
 
 ## load mean and std for normalization
-fm = np.load('Demodata/conv_mean_avg.npz')
-fs = np.load('Demodata/conv_std_avg.npz')
+fm = np.load('Demodata/mean_avg.npz')
+fs = np.load('Demodata/std_avg.npz')
 
 Um        = fm['U']
 Vm        = fm['V']
