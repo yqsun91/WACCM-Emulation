@@ -89,8 +89,8 @@ for iter in s_list:
     batch_size = 1024
 
     split_data = torch.utils.data.random_split(data, [0.75, 0.25], generator=torch.Generator().manual_seed(42))
-    train_dataloader = DataLoader(split_data[0], batch_size=batch_size, shuffle=True, num_workers=18)
-    val_dataloader = DataLoader(split_data[1], batch_size=len(split_data[1]), shuffle=True, num_workers=18)
+    train_dataloader = DataLoader(split_data[0], batch_size=batch_size, shuffle=True)
+    val_dataloader = DataLoader(split_data[1], batch_size=len(split_data[1]), shuffle=True)
 
 
      # training
