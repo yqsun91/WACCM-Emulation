@@ -10,6 +10,7 @@ from torch import nn
 import torch.nn.utils.prune as prune
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
+import Model
 
 
 ## load mean and std for normalization
