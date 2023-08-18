@@ -10,7 +10,8 @@ from torch import nn
 import torch.nn.utils.prune as prune
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
-import Model
+from Model import *
+from loaddata import newnorm, data_loader
 
 
 ## load mean and std for normalization
@@ -54,7 +55,7 @@ train_losses = []
 val_losses = [0]
 
 learning_rate = 1e-4
-epochs = 4000
+epochs = 1000
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate) # weight_decay=1e-5
 
 
@@ -64,30 +65,53 @@ for iter in s_list:
     if (iter > 1):
         model.load_state_dict(torch.load('conv_torch.pth'))
     print ('data loader iteration',iter)
-    filename  = '/glade/scratch/pahlavan/waccm_emu/Q_norm_conv/train_data_' + str(iter) + '.npz'
+    filename  = './Demodata/Demo_timestep_' + str(iter).zfill(3) + '.nc'
 
-    F = np.load(filename)
-    PS = np.asarray(F['PS'])
-    Z3 = np.asarray(F['Z3'])
-    U = np.asarray(F['U'])
-    V = np.asarray(F['V'])
-    T = np.asarray(F['T'])
+    F = nc.Dataset(filename)
+    PS = np.asarray(F['PS'][0,:,:])
+    PS = newnorm(PS, PSm, PSs)
+    
+    Z3 = np.asarray(F['Z3'][0,:,:,:])
+    Z3 = newnorm(Z3, Z3m, Z3s)
+    
+    U = np.asarray(F['U'][0,:,:,:])
+    U = newnorm(U, Um, Us)
+    
+    V = np.asarray(F['V'][0,:,:,:])
+    V = newnorm(V, Vm, Vs)
+    
+    T = np.asarray(F['T'][0,:,:,:])
+    T = newnorm(T, Tm, Ts)
+    
     lat = F['lat']
+    lat = newnorm(lat, latm, lats)
+    
     lon = F['lon']
-
-    DSE = np.asarray(F['DSE'])
-    RHOI = np.asarray(F['RHOI'])
-    NETDT = np.asarray(F['NETDT'])
-    NM = np.asarray(F['NM'])
-
-    UTGWSPEC = np.asarray(F['UTGWSPEC'])
-    VTGWSPEC = np.asarray(F['VTGWSPEC'])
-
+    lon = newnorm(lon, lonm, lons)
+    
+    DSE = np.asarray(F['DSE'][0,:,:,:])
+    DSE = newnorm(DSE, DSEm, DSEs)
+    
+    RHOI = np.asarray(F['RHOI'][0,:,:,:])
+    RHOI = newnorm(RHOI, RHOIm, RHOIs)
+    
+    NETDT = np.asarray(F['NETDT'][0,:,:,:])
+    NETDT = newnorm(NETDT, NETDTm, NETDTs)
+    
+    NM = np.asarray(F['NM'][0,:,:,:])
+    NM = newnorm(NM, NMm, NMs)
+    
+    UTGWSPEC = np.asarray(F['UTGWSPEC'][0,:,:,:])
+    UTGWSPEC = newnorm(UTGWSPEC, UTGWSPECm, UTGWSPECs)
+    
+    VTGWSPEC = np.asarray(F['VTGWSPEC'][0,:,:,:])
+    VTGWSPEC = newnorm(VTGWSPEC, VTGWSPECm, VTGWSPECs)
+    
     x_train,y_train = data_loader(U,V,T, DSE, NM, NETDT, Z3, RHOI, PS,lat,lon,UTGWSPEC, VTGWSPEC)
 
     data = myDataset(X=x_train, Y=y_train)
 
-    batch_size = 1024
+    batch_size = 128
 
     split_data = torch.utils.data.random_split(data, [0.75, 0.25], generator=torch.Generator().manual_seed(42))
     train_dataloader = DataLoader(split_data[0], batch_size=batch_size, shuffle=True)
