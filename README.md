@@ -17,7 +17,9 @@ NN-pred.py load the weights and do prediction.
 
 # Coupling ? future work
 replace original GWD scheme in WACCM with this emulator.
+
 a. the emulator can be trained offline
+
 b. training the emulator online
 
 
