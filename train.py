@@ -10,8 +10,33 @@ from torch import nn
 import torch.nn.utils.prune as prune
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
-from Model import *
+import Model
 from loaddata import newnorm, data_loader
+
+
+
+class EarlyStopper:
+    def __init__(self, patience=1, min_delta=0):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.min_validation_loss = np.inf
+
+    def early_stop(self, validation_loss):
+        if validation_loss < self.min_validation_loss:
+            self.min_validation_loss = validation_loss
+            self.counter = 0
+
+            #save model
+            torch.save(model.state_dict(), 'conv_torch.pth')
+
+        elif validation_loss > (self.min_validation_loss + self.min_delta):
+            self.counter += 1
+            if self.counter >= self.patience:
+                return True
+        return False
+
+
 
 
 ## load mean and std for normalization
@@ -49,23 +74,24 @@ VTGWSPECs    = fs['VTGWSPEC']
 dim_NN =int(564)
 dim_NNout =int(140)
 
-model = FullyConnected()
+model = Model.FullyConnected()
 
 train_losses = []
 val_losses = [0]
 
-learning_rate = 1e-4
-epochs = 1000
+learning_rate = 1e-5
+epochs = 100
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate) # weight_decay=1e-5
 
 
-s_list = list(range(1, 500))
+s_list = list(range(1, 6))
 
 for iter in s_list:
     if (iter > 1):
         model.load_state_dict(torch.load('conv_torch.pth'))
     print ('data loader iteration',iter)
     filename  = './Demodata/Demo_timestep_' + str(iter).zfill(3) + '.nc'
+    print('working on: ', filename)
 
     F = nc.Dataset(filename)
     PS = np.asarray(F['PS'][0,:,:])
@@ -98,7 +124,7 @@ for iter in s_list:
     NETDT = np.asarray(F['NETDT'][0,:,:,:])
     NETDT = newnorm(NETDT, NETDTm, NETDTs)
     
-    NM = np.asarray(F['NM'][0,:,:,:])
+    NM = np.asarray(F['NMBV'][0,:,:,:])
     NM = newnorm(NM, NMm, NMs)
     
     UTGWSPEC = np.asarray(F['UTGWSPEC'][0,:,:,:])
@@ -109,7 +135,7 @@ for iter in s_list:
     
     x_train,y_train = data_loader(U,V,T, DSE, NM, NETDT, Z3, RHOI, PS,lat,lon,UTGWSPEC, VTGWSPEC)
 
-    data = myDataset(X=x_train, Y=y_train)
+    data = Model.myDataset(X=x_train, Y=y_train)
 
     batch_size = 128
 
@@ -117,17 +143,17 @@ for iter in s_list:
     train_dataloader = DataLoader(split_data[0], batch_size=batch_size, shuffle=True)
     val_dataloader = DataLoader(split_data[1], batch_size=len(split_data[1]), shuffle=True)
 
-
      # training
-    early_stopper = EarlyStopper(patience=3, min_delta=0) # Note the hyper parameters.
+    early_stopper = EarlyStopper(patience=5, min_delta=0) # Note the hyper parameters.
     for t in range(epochs):
         if t % 2 ==0:
             print(f"Epoch {t+1}\n-------------------------------")
             print(val_losses[-1])
             print('counter=' + str(early_stopper.counter))
-        train_loss = train_loop(train_dataloader, model, nn.MSELoss(), optimizer)
+        train_loss = Model.train_loop(train_dataloader, model, nn.MSELoss(), optimizer)
+		
         train_losses.append(train_loss)
-        val_loss = val_loop(val_dataloader, model, nn.MSELoss())
+        val_loss = Model.val_loop(val_dataloader, model, nn.MSELoss())
         val_losses.append(val_loss)
         if early_stopper.early_stop(val_loss):
             print("BREAK!")
