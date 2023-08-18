@@ -6,6 +6,8 @@ This is a DNN written with PyTorch to Emulate the gravity wave drag (GWD, both z
 Sample output data from WACCM emulation.
 It is 3D global output from the WACCM model, on the original model grid.
 
+However, the demo data here is one very small part of the WACCM output due to storage limit of Github. NN trained on this Demodata will not work.
+
 
 # data loader
 load 3D WACCM data and reshaping them to the NN input.
