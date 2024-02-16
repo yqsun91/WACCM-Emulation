@@ -31,12 +31,10 @@ class myDataset(Dataset):
 class FullyConnected(nn.Module):
     def __init__(self):
         super(FullyConnected, self).__init__()
-
+        ilev=93
 
         self.linear_stack = nn.Sequential(
-            nn.Linear(564, 5000, dtype=torch.float64),
-            nn.SiLU(),
-            nn.Linear(5000, 500, dtype=torch.float64),
+            nn.Linear(8*ilev+4, 500, dtype=torch.float64),
             nn.SiLU(),
             nn.Linear(500, 500, dtype=torch.float64),
             nn.SiLU(),
@@ -58,7 +56,9 @@ class FullyConnected(nn.Module):
             nn.SiLU(),
             nn.Linear(500, 500, dtype=torch.float64),
             nn.SiLU(),
-            nn.Linear(500, 140, dtype=torch.float64),
+            nn.Linear(500, 500, dtype=torch.float64),
+            nn.SiLU(),
+            nn.Linear(500, 2*ilev, dtype=torch.float64),
         )
 
     def forward(self, X):

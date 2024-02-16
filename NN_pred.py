@@ -29,8 +29,9 @@ print(device)
 """
 Initialize Hyperparameters
 """
-dim_NN = 564
-dim_NNout = 140
+ilev = 93
+dim_NN = 8*ilev + 4
+dim_NNout = 2*ilev
 
 batch_size = 8
 learning_rate = 1e-4
